@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Union
+from typing import Union, List, Dict
 import pandas as pd
 from pathlib import Path
 from time import perf_counter
@@ -16,7 +16,7 @@ if platform.system()=='Windows':
 
 WORDS = ['team','uniberg']
 
-def get_urls() -> list[str]:
+def get_urls() -> List[str]:
     """Read urls from text file in root directory named "urls.txt".
     Returns:
         list[str]: read urls from text file
@@ -26,7 +26,7 @@ def get_urls() -> list[str]:
         urls = [line.strip() for line in f.readlines()]
         return urls
 
-async def count_words(soup: BeautifulSoup, word: str, url: str) -> dict[Union[str,int]]:
+async def count_words(soup: BeautifulSoup, word: str, url: str) -> Dict[str, Union[str,int]]:
     """Using soup object to match all occurrences of selected word in html text
     with regex.
     Args:
@@ -60,7 +60,7 @@ async def save_data(df: pd.DataFrame) -> None:
     async with aiofiles.open(result_file_path, mode='a') as f:
         await f.write(('\n'.join(lines)))
 
-async def get_aggr_data(soup: BeautifulSoup, url: str) -> dict[Union[str,int]]:
+async def get_aggr_data(soup: BeautifulSoup, url: str) -> Dict[str, Union[str,int]]:
     """Count total words and total unique words from paesed html text.
     Args:
         soup (BeautifulSoup): soup object
@@ -76,7 +76,7 @@ async def get_aggr_data(soup: BeautifulSoup, url: str) -> dict[Union[str,int]]:
     }
     return aggr_dict
 
-async def fetch_data(url: str, session: aiohttp.ClientSession, words: list[str]) -> pd.DataFrame: 
+async def fetch_data(url: str, session: aiohttp.ClientSession, words: List[str]) -> pd.DataFrame: 
     """Asynchronous fetching data from url and running async word's counting.
     Args:
         url (str): source url
@@ -95,7 +95,7 @@ async def fetch_data(url: str, session: aiohttp.ClientSession, words: list[str])
         url_stat_df = pd.merge(aggr_df, count_df, on = 'url')
         return url_stat_df       
   
-async def fetch_all(urls: list[str], session: aiohttp.ClientSession, words: list[str]) -> pd.DataFrame:
+async def fetch_all(urls: List[str], session: aiohttp.ClientSession, words: List[str]) -> pd.DataFrame:
     """Initiating async fetching for every specified in text file url.
     Args:
         urls (list[str]): target urls from text file.
@@ -107,7 +107,7 @@ async def fetch_all(urls: list[str], session: aiohttp.ClientSession, words: list
     cooroutines = [fetch_data(url, session, words) for url in urls]    
     return pd.concat(await asyncio.gather(*cooroutines), ignore_index=True) 
 
-async def main(urls: list[str], words: list[str]) -> None:
+async def main(urls: List[str], words: List[str]) -> None:
     """Main async function, which creating async aiohttp session and starting 
     fetching data from all urls and saving to text file.
     Args:
